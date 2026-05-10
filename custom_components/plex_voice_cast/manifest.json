@@ -3,7 +3,7 @@
   "name": "Plex Voice Cast",
   "version": "2.0.0",
   "documentation": "https://github.com/zMastaa/Plex-Voice-Cast",
-  "dependencies": ["media_player"],
+  "dependencies": ["media_player", "zeroconf"],
   "config_flow": true,
   "iot_class": "local_polling",
   "codeowners": ["@zMastaa"],

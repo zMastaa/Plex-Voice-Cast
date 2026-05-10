@@ -11,7 +11,7 @@ import os
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.zeroconf import async_get_instance
+from homeassistant.components.zeroconf import async_get_instance
 
 from .const import DOMAIN, _LOGGER, FUZZY_SCORE_THRESHOLD
 from .plex_voice_cast import PlexVoiceCast
