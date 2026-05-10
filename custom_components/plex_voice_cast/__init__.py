@@ -10,7 +10,7 @@ import asyncio
 import os
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import Config, HomeAssistant
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.zeroconf import async_get_instance
 
 from .const import DOMAIN, _LOGGER, FUZZY_SCORE_THRESHOLD
@@ -35,7 +35,7 @@ from .helpers import (
 )
 
 
-async def async_setup(hass: HomeAssistant, config: Config):
+async def async_setup(hass: HomeAssistant, config: dict):
     if DOMAIN in config:
         message = (
             "Configuration is now handled in the UI, please reconfigure Plex Voice Cast "
