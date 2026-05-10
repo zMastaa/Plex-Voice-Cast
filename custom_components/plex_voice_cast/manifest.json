@@ -6,7 +6,7 @@
   "dependencies": ["media_player"],
   "config_flow": true,
   "iot_class": "local_polling",
-  "codeowners": ["@maykar"],
+  "codeowners": ["@zMastaa"],
   "requirements": [
     "gTTs>=2.2.1",
     "pychromecast>=8.0.0",
