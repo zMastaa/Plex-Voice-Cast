@@ -1,5 +1,5 @@
 import re
-import time
+import asyncio
 import uuid
 import pychromecast
 
@@ -8,7 +8,7 @@ from gtts import gTTS
 from json import JSONDecodeError, loads
 from homeassistant.components.plex.services import get_plex_server
 from homeassistant.exceptions import HomeAssistantError, ServiceNotFound
-from homeassistant.core import Context
+from homeassistant.helpers import entity_registry as er
 from pychromecast.controllers.plex import PlexController
 
 from .const import DOMAIN, _LOGGER
@@ -36,7 +36,6 @@ def process_config_item(options, option_type):
 
 async def get_server(hass, config, server_name):
     try:
-        await hass.helpers.discovery.async_discover(None, None, "plex", config)
         return get_plex_server(hass, server_name)._plex_server
     except HomeAssistantError as error:
         server_name_str = ", the server_name is correct," if server_name else ""
@@ -47,22 +46,28 @@ async def get_server(hass, config, server_name):
 
 
 def get_devices(hass, pa):
-    for entity in list(hass.data["media_player"].entities):
-        info = str(entity.device_info.get("identifiers", "")) if entity.device_info else ""
-        dev_type = [x for x in ["cast", "sonos", "plex", ""] if x in info][0]
+    registry = er.async_get(hass)
+    for entry in registry.entities.values():
+        if entry.domain != "media_player":
+            continue
+        platform = entry.platform or ""
+        dev_type = next((x for x in ["cast", "sonos", "plex"] if x in platform), None)
         if not dev_type:
             continue
-        try:
-            name = hass.states.get(entity.entity_id).attributes.get("friendly_name")
-        except AttributeError:
+        state = hass.states.get(entry.entity_id)
+        if state is None:
             continue
-        pa.devices[name] = {"entity_id": entity.entity_id, "device_type": dev_type}
+        name = state.attributes.get("friendly_name")
+        if name:
+            pa.devices[name] = {"entity_id": entry.entity_id, "device_type": dev_type}
 
 
-def run_start_script(hass, pa, command, start_script, device, default_device):
+async def run_start_script(hass, pa, command, start_script, device, default_device):
     if device[0] in start_script.keys():
-        start = hass.data["script"].get_entity(start_script[device[0]])
-        start.script.run(context=Context())
+        script_entity_id = start_script[device[0]]
+        await hass.services.async_call(
+            "script", "turn_on", {"entity_id": script_entity_id}, blocking=True
+        )
         get_devices(hass, pa)
         return fuzzy(command["device"] or default_device, list(pa.devices.keys()))
     return device
@@ -70,9 +75,13 @@ def run_start_script(hass, pa, command, start_script, device, default_device):
 
 async def listeners(hass):
     def ifttt_webhook_callback(event):
-        if event.data["service"] == "plex_voice_cast.command":
-            _LOGGER.debug("IFTTT Call: %s", event.data["command"])
-            hass.services.call(DOMAIN, "command", {"command": event.data["command"]})
+        if event.data.get("service") == "plex_voice_cast.command":
+            command = event.data.get("command")
+            if command:
+                _LOGGER.debug("IFTTT Call: %s", command)
+                hass.async_create_task(
+                    hass.services.async_call(DOMAIN, "command", {"command": command})
+                )
 
     listener = hass.bus.async_listen("ifttt_webhook_received", ifttt_webhook_callback)
     try:
@@ -82,74 +91,86 @@ async def listeners(hass):
     return listener
 
 
-def media_service(hass, entity_id, call, payload=None):
+async def media_service(hass, entity_id, call, payload=None):
     args = {"entity_id": entity_id}
     if call == "play_media":
         args = {**args, **{"media_content_type": "video", "media_content_id": payload}}
     elif call == "media_seek":
         args = {**args, **{"seek_position": payload}}
-    hass.services.call("media_player", call, args)
+    await hass.services.async_call("media_player", call, args)
 
 
-def jump(hass, device, amount):
+async def jump(hass, device, amount):
     if device["device_type"] == "plex":
-        media_service(hass, device["entity_id"], "media_pause")
-        time.sleep(0.5)
+        await media_service(hass, device["entity_id"], "media_pause")
+        await asyncio.sleep(0.5)
 
     offset = hass.states.get(device["entity_id"]).attributes.get("media_position", 0) + amount
-    media_service(hass, device["entity_id"], "media_seek", offset)
+    await media_service(hass, device["entity_id"], "media_seek", offset)
 
     if device["device_type"] == "plex":
-        media_service(hass, device["entity_id"], "media_play")
+        await media_service(hass, device["entity_id"], "media_play")
 
 
-def cast_next_prev(hass, zeroconf, plex_c, device, direction):
-    entity = hass.data["media_player"].get_entity(device["entity_id"])
-    cast, browser = pychromecast.get_listed_chromecasts(
-        uuids=[uuid.UUID(entity._cast_info.uuid)], zeroconf_instance=zeroconf
-    )
-    pychromecast.discovery.stop_discovery(browser)
-    cast[0].register_handler(plex_c)
-    cast[0].wait()
-    if direction == "next":
-        plex_c.next()
-    else:
-        plex_c.previous()
+async def cast_next_prev(hass, zeroconf, plex_c, device, direction):
+    registry = er.async_get(hass)
+    entry = registry.async_get(device["entity_id"])
+    if entry is None:
+        _LOGGER.warning("cast_next_prev: entity not found in registry: %s", device["entity_id"])
+        return
+    cast_uuid = uuid.UUID(entry.unique_id)
+
+    def _get_and_control():
+        chromecasts, browser = pychromecast.get_listed_chromecasts(
+            uuids=[cast_uuid], zeroconf_instance=zeroconf
+        )
+        pychromecast.discovery.stop_discovery(browser)
+        if not chromecasts:
+            _LOGGER.warning("cast_next_prev: no chromecast found for uuid %s", cast_uuid)
+            return
+        chromecasts[0].register_handler(plex_c)
+        chromecasts[0].wait()
+        if direction == "next":
+            plex_c.next()
+        else:
+            plex_c.previous()
+
+    await hass.async_add_executor_job(_get_and_control)
 
 
-def remote_control(hass, zeroconf, control, device, jump_amount):
+async def remote_control(hass, zeroconf, control, device, jump_amount):
     plex_c = PlexController()
     if control == "jump_forward":
-        jump(hass, device, jump_amount[0])
+        await jump(hass, device, jump_amount[0])
     elif control == "jump_back":
-        jump(hass, device, -jump_amount[1])
+        await jump(hass, device, -jump_amount[1])
     elif control == "next_track" and device["device_type"] == "cast":
-        cast_next_prev(hass, zeroconf, plex_c, device, "next")
+        await cast_next_prev(hass, zeroconf, plex_c, device, "next")
     elif control == "previous_track" and device["device_type"] == "cast":
-        cast_next_prev(hass, zeroconf, plex_c, device, "previous")
+        await cast_next_prev(hass, zeroconf, plex_c, device, "previous")
     else:
-        media_service(hass, device["entity_id"], f"media_{control}")
+        await media_service(hass, device["entity_id"], f"media_{control}")
 
 
-def seek_to_offset(hass, offset, entity):
+async def seek_to_offset(hass, offset, entity):
     if offset < 1:
         return
     timeout = 0
     while not hass.states.is_state(entity, "playing") and timeout < 100:
-        time.sleep(0.10)
+        await asyncio.sleep(0.10)
         timeout += 1
 
     timeout = 0
     if hass.states.is_state(entity, "playing"):
-        media_service(hass, entity, "media_pause")
+        await media_service(hass, entity, "media_pause")
         while not hass.states.is_state(entity, "paused") and timeout < 100:
-            time.sleep(0.10)
+            await asyncio.sleep(0.10)
             timeout += 1
 
     if hass.states.is_state(entity, "paused"):
         if hass.states.get(entity).attributes.get("media_position", 0) < 9:
-            media_service(hass, entity, "media_seek", offset)
-        media_service(hass, entity, "media_play")
+            await media_service(hass, entity, "media_seek", offset)
+        await media_service(hass, entity, "media_play")
 
 
 def no_device_error(localize, device=None):
@@ -174,16 +195,16 @@ def media_error(command, localize):
     return error.capitalize()
 
 
-def play_tts_error(hass, tts_dir, device, error, lang):
+async def play_tts_error(hass, tts_dir, device, error, lang):
     tts = gTTS(error, lang=lang)
-    tts.save(tts_dir + "error.mp3")
-    hass.services.call(
+    await hass.async_add_executor_job(tts.save, tts_dir + "error.mp3")
+    await hass.services.async_call(
         "media_player",
         "play_media",
         {
             "entity_id": device,
             "media_content_type": "audio/mp3",
-            "media_content_id": "/local/plex_assist_tts/error.mp3",
+            "media_content_id": "/local/plex_voice_cast_tts/error.mp3",
         },
     )
 
@@ -230,7 +251,7 @@ def filter_media(pa, command, media, library):
             media = pa.library.sectionByID(pa.section_id[library]).recentlyAdded()[:200]
         elif not media:
             media = pa.library.sectionByID(pa.tv_id).recentlyAdded()
-            media += pa.library.sectionByID(pa.mov_id).recentlyAdded()
+            media += pa.library.sectionByID(pa.movie_id).recentlyAdded()
             media.sort(key=lambda x: getattr(x, "addedAt", None), reverse=True)
             media = media[:200]
     elif command["latest"]:
@@ -287,7 +308,7 @@ def roman_numeral_test(media, lib):
 
 
 def find_media(pa, command):
-    result = ""
+    result = None
     lib = ""
     if getattr(command["media"], "type", None) in ["artist", "album", "track"]:
         return [command["media"], command["media"].type]

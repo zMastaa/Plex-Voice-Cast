@@ -6,13 +6,14 @@ Play to Google Cast devices or Plex Clients using fuzzy searches for media and
 cast device names.
 """
 
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import Config, HomeAssistant
-from homeassistant.components.zeroconf import async_get_instance
-
+import asyncio
 import os
 
-from .const import DOMAIN, _LOGGER
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import Config, HomeAssistant
+from homeassistant.helpers.zeroconf import async_get_instance
+
+from .const import DOMAIN, _LOGGER, FUZZY_SCORE_THRESHOLD
 from .plex_voice_cast import PlexVoiceCast
 from .process_speech import ProcessSpeech
 from .localize import translations
@@ -69,11 +70,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     def pa_executor(_server, start_script_keys):
         _pa = PlexVoiceCast(_server, start_script_keys)
-        get_devices(hass, _pa)
         _LOGGER.debug(f"Media titles: {len(_pa.media['all_titles'])}")
         return _pa
 
     pa = await hass.async_add_executor_job(pa_executor, server, list(start_script.keys()))
+    get_devices(hass, pa)
 
     tts_dir = hass.config.path() + "/www/plex_voice_cast_tts/"
     if tts_errors and not os.path.exists(tts_dir):
@@ -83,10 +84,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     hass.data[DOMAIN][entry.entry_id] = {"remove_listener": ifttt_listener}
     entry.add_update_listener(async_reload_entry)
 
-    def handle_input(call):
-        hass.services.async_call("plex", "scan_for_clients", blocking=False, limit=30)
-        command = call.data.get("command").strip()
-        media = None
+    async def handle_input(call):
+        await hass.services.async_call("plex", "scan_for_clients", blocking=False)
+        command = call.data.get("command", "").strip()
 
         if not command:
             _LOGGER.warning(localize["no_call"])
@@ -106,15 +106,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
             no_device_error(localize)
             return
 
-        if pa.media["updated"] < pa.library.search(sort="addedAt:desc", limit=1)[0].addedAt:
-            type(pa).media.fget.cache_clear()
+        latest_added_at = await hass.async_add_executor_job(
+            lambda: pa.library.search(sort="addedAt:desc", limit=1)[0].addedAt
+        )
+        if pa.media["updated"] < latest_added_at:
+            pa.__dict__.pop("media", None)
             _LOGGER.debug(f"Updated Library: {pa.media['updated']}")
 
         device = fuzzy(command["device"] or default_device, pa.device_names)
-        device = run_start_script(hass, pa, command, start_script, device, default_device)
+        device = await run_start_script(hass, pa, command, start_script, device, default_device)
 
         _LOGGER.debug("PA Devices: %s", pa.devices)
-        if device[1] < 60:
+        if device[1] < FUZZY_SCORE_THRESHOLD:
             no_device_error(localize, command["device"])
             return
         _LOGGER.debug("Device: %s", device[0])
@@ -122,17 +125,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         device = pa.devices[device[0]]
 
         if command["control"]:
-            remote_control(hass, zeroconf, command["control"], device, jump_amount)
+            await remote_control(hass, zeroconf, command["control"], device, jump_amount)
             return
 
-        media, library = find_media(pa, command)
-        media, offset = filter_media(pa, command, media, library)
+        media, library = await hass.async_add_executor_job(find_media, pa, command)
+        media, offset = await hass.async_add_executor_job(filter_media, pa, command, media, library)
 
         if not media:
             error = media_error(command, localize)
             _LOGGER.warning(error)
             if tts_errors and device["device_type"] != "plex":
-                play_tts_error(hass, tts_dir, device["entity_id"], error, lang)
+                await play_tts_error(hass, tts_dir, device["entity_id"], error, lang)
             return
 
         _LOGGER.debug("Media: %s", str(media.items))
@@ -144,8 +147,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
             server._server.friendlyName,
         )
 
-        media_service(hass, device["entity_id"], "play_media", payload)
-        seek_to_offset(hass, offset, device["entity_id"])
+        await media_service(hass, device["entity_id"], "play_media", payload)
+        await seek_to_offset(hass, offset, device["entity_id"])
 
     hass.services.async_register(DOMAIN, "command", handle_input)
     return True

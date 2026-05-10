@@ -6,10 +6,6 @@ from .const import DOMAIN
 
 async def async_setup_intents(hass):
     intent.async_register(hass, PlexVoiceCastIntent())
-    hass.components.conversation.async_register(
-        "Plex",
-        ["Tell Plex to {command}", "{command} with Plex"],
-    )
 
 
 class PlexVoiceCastIntent(intent.IntentHandler):

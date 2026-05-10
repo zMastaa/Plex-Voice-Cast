@@ -1,15 +1,16 @@
 {
   "domain": "plex_voice_cast",
   "name": "Plex Voice Cast",
-  "version": "1.1.9",
+  "version": "2.0.0",
   "documentation": "https://github.com/zMastaa/Plex-Voice-Cast",
   "dependencies": ["media_player"],
   "config_flow": true,
+  "iot_class": "local_polling",
   "codeowners": ["@maykar"],
   "requirements": [
     "gTTs>=2.2.1",
     "pychromecast>=8.0.0",
-    "rapidfuzz==1.1.1",
+    "rapidfuzz>=3.0.0",
     "plexapi>=4.3.0",
     "awesomeversion>=21.2.2"
   ]

@@ -1,6 +1,7 @@
 import re
 
 from .helpers import fuzzy
+from .const import FUZZY_SCORE_THRESHOLD
 
 
 class ProcessSpeech:
@@ -33,6 +34,10 @@ class ProcessSpeech:
         ]
         return {option: getattr(self, option, None) for option in options}
 
+    @staticmethod
+    def parse(pa, localize, command, default_cast):
+        return ProcessSpeech(pa, localize, command, default_cast).results
+
     def process_command(self):
         controls = self.localize["controls"]
         pre_command = self.command
@@ -48,7 +53,7 @@ class ProcessSpeech:
                     self.find_replace("separator")
                     if device[0] in ["watched", "deck", "on watched", "on deck"]:
                         continue
-                    if device[1] > 60 and self.command.replace(device[0].lower(), "").strip() == c:
+                    if device[1] > FUZZY_SCORE_THRESHOLD and self.command.replace(device[0].lower(), "").strip() == c:
                         self.device = device[0]
                         self.control = control
                         return
@@ -140,22 +145,22 @@ class ProcessSpeech:
                 self.find_replace("music_separator", True, separator)
                 split = self.command.split(f" {separator} ")
                 artist = fuzzy(split[-1], self.pa.media["artist_titles"])
-                if artist[1] > 60:
+                if artist[1] > FUZZY_SCORE_THRESHOLD:
                     albums = self.pa.server.search(artist[0], "album")
                     album_titles = [x.title for x in albums]
                     tracks = self.pa.server.search(artist[0], "track")
                     track_titles = [x.title for x in tracks]
                     if not self.library:
                         artist_item = fuzzy(split[0], album_titles + track_titles)
-                        if artist_item[1] > 60:
+                        if artist_item[1] > FUZZY_SCORE_THRESHOLD:
                             return next((x for x in albums + tracks if artist_item[0] in getattr(x, "title", "")), None)
                     elif self.library == "album":
                         artist_item = fuzzy(split[0], album_titles)
-                        if artist_item[1] > 60:
+                        if artist_item[1] > FUZZY_SCORE_THRESHOLD:
                             return next((x for x in albums if artist_item[0] in getattr(x, "title", "")), None)
                     elif self.library == "track":
                         artist_item = fuzzy(split[0], track_titles)
-                        if artist_item[1] > 60:
+                        if artist_item[1] > FUZZY_SCORE_THRESHOLD:
                             return next((x for x in tracks if artist_item[0] in getattr(x, "title", "")), None)
         return self.command
 

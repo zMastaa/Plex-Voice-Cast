@@ -1,6 +1,11 @@
 command:
-  description: Send command to Plex
+  name: Send Command
+  description: Send a voice command to Plex Voice Cast.
   fields:
     command:
-      description: '[Required] Command to send'
-      example: Play Evil Dead on the Living Room TV
+      name: Command
+      description: The voice command, e.g. "Play Breaking Bad on the Living Room TV".
+      required: true
+      example: Play Breaking Bad on the Living Room TV
+      selector:
+        text:

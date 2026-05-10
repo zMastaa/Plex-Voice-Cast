@@ -1,5 +1,5 @@
 from datetime import datetime
-from functools import lru_cache
+from functools import cached_property
 
 
 class PlexVoiceCast:
@@ -29,8 +29,7 @@ class PlexVoiceCast:
             "track": self.music_id,
         }
 
-    @property
-    @lru_cache()
+    @cached_property
     def media(self):
         media_items = {"all_titles": []}
         for item in ["show", "movie", "artist", "album", "track"]:
