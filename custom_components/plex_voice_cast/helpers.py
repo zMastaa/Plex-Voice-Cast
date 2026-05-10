@@ -41,7 +41,7 @@ async def get_server(hass, config, server_name):
     except HomeAssistantError as error:
         server_name_str = ", the server_name is correct," if server_name else ""
         _LOGGER.warning(
-            f"Plex Assistant: {error.args[0]}. Ensure that you've setup the HA "
+            f"Plex Voice Cast: {error.args[0]}. Ensure that you've setup the HA "
             f"Plex integration{server_name_str} and the server is reachable. "
         )
 
@@ -70,7 +70,7 @@ def run_start_script(hass, pa, command, start_script, device, default_device):
 
 async def listeners(hass):
     def ifttt_webhook_callback(event):
-        if event.data["service"] == "plex_assistant.command":
+        if event.data["service"] == "plex_voice_cast.command":
             _LOGGER.debug("IFTTT Call: %s", event.data["command"])
             hass.services.call(DOMAIN, "command", {"command": event.data["command"]})
 

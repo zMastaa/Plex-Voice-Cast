@@ -1,11 +1,9 @@
 """
-Plex Assistant is a component for Home Assistant to add control of Plex to
+Plex Voice Cast is a component for Home Assistant to add control of Plex to
 Google Assistant with a little help from IFTTT or DialogFlow.
 
 Play to Google Cast devices or Plex Clients using fuzzy searches for media and
 cast device names.
-
-https://github.com/maykar/plex_assistant
 """
 
 from homeassistant.config_entries import ConfigEntry
@@ -15,7 +13,7 @@ from homeassistant.components.zeroconf import async_get_instance
 import os
 
 from .const import DOMAIN, _LOGGER
-from .plex_assistant import PlexAssistant
+from .plex_voice_cast import PlexVoiceCast
 from .process_speech import ProcessSpeech
 from .localize import translations
 from .helpers import (
@@ -38,17 +36,16 @@ from .helpers import (
 
 async def async_setup(hass: HomeAssistant, config: Config):
     if DOMAIN in config:
-        changes_url = "https://github.com/maykar/plex_assistant/blob/master/ver_one_update.md"
         message = (
-            "Configuration is now handled in the UI, please read the %s for how to migrate "
-            "to the new version and more info.%s "
+            "Configuration is now handled in the UI, please reconfigure Plex Voice Cast "
+            "via the Integrations page.%s "
         )
         service_data = {
-            "title": "Plex Assistant Breaking Changes",
-            "message": message % (f"[change log]({changes_url})", "."),
+            "title": "Plex Voice Cast Breaking Changes",
+            "message": message % ".",
         }
         await hass.services.async_call("persistent_notification", "create", service_data, False)
-        _LOGGER.warning("Plex Assistant: " + message % ("change log", f". {changes_url}"))
+        _LOGGER.warning("Plex Voice Cast: " + message % "")
     return True
 
 
@@ -71,14 +68,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         return True
 
     def pa_executor(_server, start_script_keys):
-        _pa = PlexAssistant(_server, start_script_keys)
+        _pa = PlexVoiceCast(_server, start_script_keys)
         get_devices(hass, _pa)
         _LOGGER.debug(f"Media titles: {len(_pa.media['all_titles'])}")
         return _pa
 
     pa = await hass.async_add_executor_job(pa_executor, server, list(start_script.keys()))
 
-    tts_dir = hass.config.path() + "/www/plex_assist_tts/"
+    tts_dir = hass.config.path() + "/www/plex_voice_cast_tts/"
     if tts_errors and not os.path.exists(tts_dir):
         os.makedirs(tts_dir, mode=0o777)
 

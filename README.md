@@ -1,23 +1,23 @@
-# ❱ Plex Assistant
+# ❱ Plex Voice Cast
 
 [![hacs_badge](https://img.shields.io/badge/HACS-Default-yellow.svg)](https://github.com/custom-components/hacs) [![hacs_badge](https://img.shields.io/badge/Buy-Me%20a%20Coffee-critical)](https://www.buymeacoffee.com/FgwNR2l)
 
 [Installation](#installation) ｜ [Configuration](#configuration) ｜ [Cast Devices](#cast-devices) ｜ [Commands](#commands)<br>
 [Google Assistant Setup](#google-assistant-setup) ｜ [HA Conversation Setup](#home-assistant-conversation-setup) ｜ [Advanced Config](#advanced-configuration)<br><hr>
 
-Plex Assistant is a Home Assistant integration for casting Plex media to Google devices, Sonos devices, and Plex clients with Google Assistant, HA's conversation integration, and more. You can use this component with anything that can make a service call to HA as well.
+Plex Voice Cast is a Home Assistant integration for casting Plex media to Google devices, Sonos devices, and Plex clients with Google Assistant, HA's conversation integration, and more. You can use this component with anything that can make a service call to HA as well.
 
 Example: `"Hey Google, tell Plex to play The Walking Dead on the Downstairs TV."`
 
-You can use the component's service (`plex_assistant.command`) to call the commands however you'd like. Visit the services tab in HA's Developer Tools to test it out.
+You can use the component's service (`plex_voice_cast.command`) to call the commands however you'd like. Visit the services tab in HA's Developer Tools to test it out.
 
-## [Troubleshooting and Issues](https://github.com/maykar/plex_assistant/blob/master/troubleshooting.md)
+## [Troubleshooting and Issues](https://github.com/zMastaa/Plex-Voice-Cast/blob/master/troubleshooting.md)
 
 ## Version 1.0.0+
 
-There have been many changes in version 1.0.0, follow the [1.0.0 Update Guide](https://github.com/maykar/plex_assistant/blob/master/ver_one_update.md) if updating from a lower version.
+There have been many changes in version 1.0.0, follow the [1.0.0 Update Guide](https://github.com/zMastaa/Plex-Voice-Cast/blob/master/ver_one_update.md) if updating from a lower version.
 
-This version requires Home Assistant 2021.2.0+. Use [version 0.3.4](https://github.com/maykar/plex_assistant/releases/tag/0.3.4) if you are on lower versions of HA and find the [old readme here](https://github.com/maykar/plex_assistant/blob/master/OLD_README.md).
+This version requires Home Assistant 2021.2.0+. Use [version 0.3.4](https://github.com/zMastaa/Plex-Voice-Cast/releases/tag/0.3.4) if you are on lower versions of HA and find the [old readme here](https://github.com/zMastaa/Plex-Voice-Cast/blob/master/OLD_README.md).
 
 ## Supporting Development
 - :coffee:&nbsp;&nbsp;[Buy me a coffee](https://www.buymeacoffee.com/FgwNR2l)
@@ -27,30 +27,30 @@ This version requires Home Assistant 2021.2.0+. Use [version 0.3.4](https://gith
 ## Installation
 Install by using one of the methods below:
 
-* **Install with [HACS](https://hacs.xyz/):** Search integrations for "Plex Assistant", select it, hit install, and restart.
+* **Install with [HACS](https://hacs.xyz/):** Search integrations for "Plex Voice Cast", select it, hit install, and restart.
 
-* **Install Manually:** Install this component by downloading the project and then copying the `/custom_components/plex_assistant/` folder to the `custom_components` folder in your config directory (create the folder if it doesn't exist) and restart.
+* **Install Manually:** Install this component by downloading the project and then copying the `/custom_components/plex_voice_cast/` folder to the `custom_components` folder in your config directory (create the folder if it doesn't exist) and restart.
 
 ## Configuration
-**You need to have [HA's Plex integration](https://www.home-assistant.io/integrations/plex/) setup in order to use Plex Assistant.**<br>
+**You need to have [HA's Plex integration](https://www.home-assistant.io/integrations/plex/) setup in order to use Plex Voice Cast.**<br>
 
 If you want a Plex Client as your default device, make sure it is open/reachable before setup.
 
 * In your sidebar click "Configuration"
 * Go to "Integrations" and click "Add Integration"
-* Search for "Plex Assistant" and click it
+* Search for "Plex Voice Cast" and click it
 * Follow the steps shown to select intial config options
 
 Your Plex server is automatically retrieved from Home Assistant's Plex integration, if you have more than one server setup it will ask which one to use.
 
-After setup you can click "Options" on Plex Assistant's card for more config options including: jump forward/back amount and [Advanced Config Options](#advanced-configuration).
+After setup you can click "Options" on Plex Voice Cast's card for more config options including: jump forward/back amount and [Advanced Config Options](#advanced-configuration).
 
 ## Cast Devices
-This component automatically detects compatible media_player entities from Home Assistant (Google Cast devices, Sonos devices, and Plex clients). Setting a default device will use that device if none is specified in the command. Plex Assistant uses the friendly name from the entities for commands. To change a Plex client's friendly name in HA it needs to be open and reachable before doing so.
+This component automatically detects compatible media_player entities from Home Assistant (Google Cast devices, Sonos devices, and Plex clients). Setting a default device will use that device if none is specified in the command. Plex Voice Cast uses the friendly name from the entities for commands. To change a Plex client's friendly name in HA it needs to be open and reachable before doing so.
 
 ## Google Assistant Setup
 
-You can either use IFTTT or DialogFlow to trigger Plex Assistant with Google Assistant.
+You can either use IFTTT or DialogFlow to trigger Plex Voice Cast with Google Assistant.
 
 * IFTTT is the easiest way to set this up, but only if IFTTT supports your language.
 * DialogFlow is a bit more involved and has some quirks, like always responding "I'm starting the test version of Plex", but it has support for more languages. Only use DialogFlow if your language is otherwise unsupported.
@@ -85,11 +85,11 @@ Now you can select how you want to trigger this service, you can select up to 3 
 * Select method "Post" and content type "application/json"
 * Then copy and paste the code below into the body field
 
-`{ "action": "call_service", "service": "plex_assistant.command", "command": "{{TextField}}" }`
+`{ "action": "call_service", "service": "plex_voice_cast.command", "command": "{{TextField}}" }`
 
 Finally click "Create Action", then "Continue", and then "Finish".
 
-You can now trigger Plex Assistant by saying "Hey Google, tell plex to..." or "Hey Google, ask plex to..."
+You can now trigger Plex Voice Cast by saying "Hey Google, tell plex to..." or "Hey Google, ask plex to..."
 
 </details>
 
@@ -109,12 +109,12 @@ The DialogFlow trigger requires Home Assistant's [Conversation integration](http
 
 #### In DialogFlow
 
-Download [Plex_Assistant_DialogFlow.zip](https://github.com/maykar/plex_assistant/raw/master/Plex_Assistant_DialogFlow.zip) and then visit https://dialogflow.cloud.google.com . Sign up or sign in using the same Google account tied to your Google Assistant. Keep going until you get to the "Welcome to Dialogflow!" page with "Create Agent" in the sidebar.
+Download [Plex_Voice_Cast_DialogFlow.zip](https://github.com/zMastaa/Plex-Voice-Cast/raw/master/Plex_Voice_Cast_DialogFlow.zip) and then visit https://dialogflow.cloud.google.com . Sign up or sign in using the same Google account tied to your Google Assistant. Keep going until you get to the "Welcome to Dialogflow!" page with "Create Agent" in the sidebar.
 
 * Click on Create Agent and Type "Plex" as the agent name and hit "Create"
 * Now click the settings icon next to "Plex" in the sidebar
 * Navigate to "Export and Import" and click "Restore from ZIP"
-* Select the `Plex_Assistant_DialogFlow.zip` file we downloaded earlier and restore
+* Select the `Plex_Voice_Cast_DialogFlow.zip` file we downloaded earlier and restore
 * Click "Fulfillment" in the sidebar and change the URL to the one HA gave us for DialogFlow
 * Scroll down and hit "Save"
 
@@ -140,7 +140,7 @@ Next you need to publish a test version:
 * Click "Not ready yet? Continue with the _integration_" in the top panel.
 * You should see a dialog shown. Click the 'Test' button.
   
-You can now trigger Plex Assistant by saying "Hey Google, tell plex to..." or "Hey Google, ask plex to..."
+You can now trigger Plex Voice Cast by saying "Hey Google, tell plex to..." or "Hey Google, ask plex to..."
 
 </details>
 
@@ -165,7 +165,7 @@ You can now trigger Plex Assistant by saying "Hey Google, tell plex to..." or "H
 
 Requires Home Assistant's [Conversation integration](https://www.home-assistant.io/integrations/conversation/) to be enabled.
 
-By default Plex Assistant will work with HA's Conversation integration with the phrases `"Tell Plex to {command}"` and `"{command} with Plex"` with no additional configuration nessisary. All the languages in the table above are supported, but you'd need to make a trigger phrase in your language. If you would like to add more trigger phrases you can do so by using the code below as an example.
+By default Plex Voice Cast will work with HA's Conversation integration with the phrases `"Tell Plex to {command}"` and `"{command} with Plex"` with no additional configuration nessisary. All the languages in the table above are supported, but you'd need to make a trigger phrase in your language. If you would like to add more trigger phrases you can do so by using the code below as an example.
 
 ```yaml
 conversation:
@@ -180,7 +180,7 @@ conversation:
 #### Fuzzy Matching
 A media item's title and the device used in your phrase are processed using a fuzzy search. Meaning it will select the closest match using your Plex media titles and available cast device names. `"play walk in deed on the dawn tee"` would become `"Play The Walking Dead on the Downstairs TV."`. This even works for partial matches. `play Pets 2` will match `The Secret Life of Pets 2`.
 
-If no season/episode is specified for a TV show Plex Assistant will play the first unwatched or first in progress episode by default. If an artist, album, or track share the same name it will assume artist first, then album, then track. You can always specify by saying "Play album `album name`", "Play artist...", "Play track...", or even combine those with an artists name: "Play Never Gonna Give You Up **by** Rick Astley" or "Play the **album** Whenever You Need Somebody **by** Rick Astley". This can help with artists having a self titled album or track as well as multiple artists having items with the same name.
+If no season/episode is specified for a TV show Plex Voice Cast will play the first unwatched or first in progress episode by default. If an artist, album, or track share the same name it will assume artist first, then album, then track. You can always specify by saying "Play album `album name`", "Play artist...", "Play track...", or even combine those with an artists name: "Play Never Gonna Give You Up **by** Rick Astley" or "Play the **album** Whenever You Need Somebody **by** Rick Astley". This can help with artists having a self titled album or track as well as multiple artists having items with the same name.
 
 #### You can say things like:
 * `"play the latest episode of Breaking Bad on the Living Room TV"`
@@ -243,12 +243,12 @@ And yet another use would be to improve translations, for example: If there are 
 
 ## Start Scripts
 
-This option will trigger a script to start a Plex client if it is currently unavailable. For example: You have a Roku with the Plex app, but need it to be open for Plex Assistant to control it.<br><br>The formatting needed is the friendly name of the client that you want to open in quotes (case sensitive) followed by a colon then the HA script to start the client in quotes. Seperate multiple entries with a comma.
+This option will trigger a script to start a Plex client if it is currently unavailable. For example: You have a Roku with the Plex app, but need it to be open for Plex Voice Cast to control it.<br><br>The formatting needed is the friendly name of the client that you want to open in quotes (case sensitive) followed by a colon then the HA script to start the client in quotes. Seperate multiple entries with a comma.
 ```
 "LivingRoom TV":"script.start_lr_plex", "Bedroom TV":"script.open_br_plex"
 ```
 The script would be different for every device and some devices might not have the ability to do this.<br>
-Plex Assistant will wait for the start script to finish before continuing, so having a check for device availability is advisable. That way the script can both wait for the device to be available or quickly end if it already is.<br><br>
+Plex Voice Cast will wait for the start script to finish before continuing, so having a check for device availability is advisable. That way the script can both wait for the device to be available or quickly end if it already is.<br><br>
 The example below would start the Plex app on a Roku device.<br>The script waits until the app is open on the device and the app reports as available (take note of the comments in the code). 
 
 ```

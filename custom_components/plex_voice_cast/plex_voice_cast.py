@@ -2,7 +2,7 @@ from datetime import datetime
 from functools import lru_cache
 
 
-class PlexAssistant:
+class PlexVoiceCast:
     def __init__(self, server, start_script_keys):
         self.server = server
         self.library = self.server.library

@@ -38,14 +38,14 @@ def get_schema(_self):
     return {**multi_server_schema, **default_schema} if len(_self.servers) > 1 else default_schema
 
 
-class PlexAssistantFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
+class PlexVoiceCastFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     VERSION = 1
     CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
 
     @staticmethod
     @callback
     def async_get_options_flow(config_entry):
-        return PlexAssistantOptionsFlowHandler(config_entry)
+        return PlexVoiceCastOptionsFlowHandler(config_entry)
 
     def __init__(self):
         self.servers = None
@@ -72,7 +72,7 @@ class PlexAssistantFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
 
-class PlexAssistantOptionsFlowHandler(config_entries.OptionsFlow):
+class PlexVoiceCastOptionsFlowHandler(config_entries.OptionsFlow):
     def __init__(self, config_entry):
         self.config_entry = config_entry
         self.options = dict(config_entry.options)

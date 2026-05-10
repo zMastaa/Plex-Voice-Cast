@@ -5,14 +5,14 @@ from .const import DOMAIN
 
 
 async def async_setup_intents(hass):
-    intent.async_register(hass, PlexAssistantIntent())
+    intent.async_register(hass, PlexVoiceCastIntent())
     hass.components.conversation.async_register(
         "Plex",
         ["Tell Plex to {command}", "{command} with Plex"],
     )
 
 
-class PlexAssistantIntent(intent.IntentHandler):
+class PlexVoiceCastIntent(intent.IntentHandler):
     intent_type = "Plex"
     slot_schema = {"command": cv.string}
 

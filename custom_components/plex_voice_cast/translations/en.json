@@ -1,0 +1,35 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "❱ Plex Voice Cast Setup",
+        "description": "[Documentation](https://github.com/zMastaa/Plex-Voice-Cast)  |  [Troubleshooting](https://github.com/zMastaa/Plex-Voice-Cast/blob/master/troubleshooting.md)",
+        "data": {
+          "server_name": "Select Plex server",
+          "language": "Language",
+          "default_cast": "Default cast device",
+          "tts_errors": "Speak errors on cast device"
+        }
+      }
+    },
+    "abort": {
+      "single_instance_allowed": "Only a single instance is allowed.",
+      "no_plex_server": "No Plex servers were found, be sure that the Home Assistant Plex integration is setup and working.",
+      "ha_ver_unsupported": "This Plex Voice Cast version requires Home Assistant 2021.2.0 or higher."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "❱ Plex Voice Cast Advanced Options",
+        "description": "[Documentation](https://github.com/zMastaa/Plex-Voice-Cast)  |  [Troubleshooting](https://github.com/zMastaa/Plex-Voice-Cast/blob/master/troubleshooting.md)\n\n**Read the [Advanced Config Docs](https://github.com/zMastaa/Plex-Voice-Cast#advanced-configuration) for how to format of the next 2 options.**",
+        "data": {
+          "start_script": "Run a script to start an unavailable Plex client",
+          "keyword_replace": "Replace keywords or phrases with your own",
+          "jump_f": "Default jump forward amount in seconds.",
+          "jump_b": "Default jump backward amount in seconds."
+        }
+      }
+    }
+  }
+}
